@@ -12,10 +12,14 @@ export function activate(context: vscode.ExtensionContext) {
         body: JSON.stringify({ code: code }),
       });
       const result: any = await response.json();
-      console.log(result);
+      let suggestions: any;
       if (response.ok && result.suggestion) {
-        vscode.window.showOpenDialog
         vscode.window.showInformationMessage(result.suggestion);
+        suggestions = JSON.parse(result.suggestion);
+        vscode.window.showInformationMessage(suggestions);
+        for (const suggestion of suggestions) {
+          vscode.window.showInformationMessage(suggestion["suggested_code_snippet"]);
+        }
       } else {
         vscode.window.showErrorMessage('Error fetching compliance results: ' + result.error);
       }
