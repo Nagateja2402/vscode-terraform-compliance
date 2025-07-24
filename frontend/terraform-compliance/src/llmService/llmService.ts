@@ -17,11 +17,14 @@ export interface SuggestionWithLocation extends Suggestion {
 export class LLMService {
     async analyzeTerraformCode(code: string): Promise<Suggestion[]> {
         try {
-            const response = await fetch('http://localhost:3000/analyze', {
+            console.log(code)
+            let bedrockAPIKey = process.env.BEDROCK_API_KEY;
+            const response = await fetch('https://tyur5kvly6.execute-api.us-east-1.amazonaws.com/dev/analyze', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', 'X-API-Key': `${bedrockAPIKey}` },
             body: JSON.stringify({ code: code }),
             });
+            console.log(response.status, response.statusText);
             if (!response.ok) {
                 console.error('HTTP error:', response.status, response.statusText);
                 return [];
