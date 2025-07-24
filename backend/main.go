@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"regexp"
@@ -12,8 +11,8 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
-	"github.com/aws/aws-sdk-go-v2/service/bedrockruntime"
-	"github.com/aws/aws-sdk-go-v2/service/bedrockruntime/types"
+	"github.com/aws/aws-sdk-go-v2/service/bedrockagentruntime"
+	"github.com/aws/aws-sdk-go-v2/service/bedrockagentruntime/types"
 )
 
 // AnalyzeRequest defines the structure of the incoming JSON request.
@@ -26,17 +25,12 @@ type AnalyzeResponse struct {
 	Suggestion string `json:"suggestion"`
 }
 
-// BedrockOutput is used to parse the nested 'output' from the Bedrock response.
-type BedrockOutput struct {
-	Output string `json:"output"`
-}
-
-// BedrockConverseAPI encapsulates the Bedrock client.
+// BedrockConverseAPI encapsulates the Bedrock agent client.
 type BedrockConverseAPI struct {
-	Client *bedrockruntime.Client
+	Client *bedrockagentruntime.Client
 }
 
-// NewBedrockConverseAPI creates a new Bedrock API client.
+// NewBedrockConverseAPI creates a new Bedrock agent API client.
 func NewBedrockConverseAPI(ctx context.Context, region string) (*BedrockConverseAPI, error) {
 	cfg, err := config.LoadDefaultConfig(ctx, config.WithRegion(region))
 	if err != nil {
@@ -44,7 +38,7 @@ func NewBedrockConverseAPI(ctx context.Context, region string) (*BedrockConverse
 	}
 
 	return &BedrockConverseAPI{
-		Client: bedrockruntime.NewFromConfig(cfg),
+		Client: bedrockagentruntime.NewFromConfig(cfg),
 	}, nil
 }
 
@@ -68,158 +62,74 @@ func (api *BedrockConverseAPI) analyzeHandler(w http.ResponseWriter, r *http.Req
 
 	// Clean the input code
 	cleanedCode := strings.ReplaceAll(req.Code, "\n", " ")
-	log.Printf("Received code: %s", cleanedCode)
 
 	// --- Start of new logic to filter context data ---
 
 	// 1. Extract resource types from the input code using regex.
 	re := regexp.MustCompile(`resource\s+"([^"]+)"`)
 	matches := re.FindAllStringSubmatch(cleanedCode, -1)
-	resourceTypes := []string{}
+	resourceTypes := ""
 	for _, match := range matches {
 		if len(match) > 1 {
-			resourceTypes = append(resourceTypes, match[1])
+			resourceTypes += match[1] + ", "
 		}
 	}
-	log.Printf("Found resource types in code: %v", resourceTypes)
-
-	// 2. Read helper documents.
-	file1Bytes, err := ioutil.ReadFile("./helper/aws_security_controls.json")
-	if err != nil {
-		http.Error(w, "Failed to read aws_security_controls.json", http.StatusInternalServerError)
-		log.Printf("Error reading file1: %v", err)
-		return
-	}
-	var securityControls []map[string]interface{}
-	json.Unmarshal(file1Bytes, &securityControls)
-
-	file2Bytes, err := ioutil.ReadFile("./helper/terraform_registry.json")
-	if err != nil {
-		http.Error(w, "Failed to read terraform_registry.json", http.StatusInternalServerError)
-		log.Printf("Error reading file2: %v", err)
-		return
-	}
-	var terraformRegistry map[string]interface{}
-	json.Unmarshal(file2Bytes, &terraformRegistry)
-
-	// 3. Filter the data based on extracted resource types.
-	relevantControls := []map[string]interface{}{}
-	for _, control := range securityControls {
-		controlStr, _ := json.Marshal(control)
-		for _, resType := range resourceTypes {
-			if strings.Contains(string(controlStr), resType) {
-				relevantControls = append(relevantControls, control)
-				break // Avoid adding the same control multiple times
-			}
-		}
-	}
-
-	relevantRegistryEntries := make(map[string]interface{})
-	for _, resType := range resourceTypes {
-		if entry, ok := terraformRegistry[resType]; ok {
-			relevantRegistryEntries[resType] = entry
-		}
-	}
-
-	// 4. Create the new, smaller contextData.
-	relevantControlsBytes, _ := json.Marshal(relevantControls)
-	relevantRegistryBytes, _ := json.Marshal(relevantRegistryEntries)
-	contextData := fmt.Sprintf("Training data 1: %s\n\nTraining data 2: %s", string(relevantControlsBytes), string(relevantRegistryBytes))
-
-	// --- End of new logic ---
 
 	// Construct the prompt for the model
-	promptTemplate := `You are a Terraform compliance analysis engine. You have been trained on internal JSON compliance documents.
-
-Your task is to analyze the provided Terraform code, identify non-compliant patterns, and generate a JSON object containing specific code modifications to fix them.
-
-Analysis Scope: Your analysis MUST focus exclusively on resource blocks within the Terraform code. Ignore all other block types, including provider, terraform, variable, output, and data blocks. All suggestions must pertain only to the attributes and definitions within the resource blocks.
-
-Output Requirements:
-
-Format: The output MUST be a single, valid JSON array of objects.
-
-Content: Each object in the array represents a single required code change and MUST contain the following keys:
-
-"line_number": An integer for the line in the original code where the non-compliant code begins within a resource block.
-
-"current_code": A string containing the exact block or line(s) of code from a resource block that are non-compliant.
-
-"suggested_code": A string containing the compliant code that should replace the current_code.
-
-Exclusions: Do NOT include explanations, markdown formatting, or any text outside of the final JSON array.
+	promptTemplate := `
+Your task is to analyze the provided Terraform code, identify non-compliant patterns based on the FSBP sentinel policies in the knowledge base, and generate a JSON object containing specific code modifications to fix them.
 
 Terraform Code to Analyze:
 {code}
+
+Resource Types to Consider: {resourceTypes}
+
+Exclusions: Do NOT include explanations, markdown formatting, or any text outside of the final JSON array.
+
+Give utmost two suggestion per query. Don't give same suggestion twice.
 `
-	fmt.Printf("Using prompt template: %s\n", promptTemplate)
 
 	finalPrompt := strings.Replace(promptTemplate, "{code}", cleanedCode, 1)
+	finalPrompt = strings.Replace(finalPrompt, "{resourceTypes}", resourceTypes, 1)
 
 	// Define the model and parameters
-	modelID := "us.meta.llama3-3-70b-instruct-v1:0"
-	temperature := float32(0)
-	maxTokens := int32(2048)
+	agentID := "CJUKDDIFLZ"
+	agentAliasID := "SLBMZALQD4"
 
-	// Create the input for the Bedrock Converse API
-	input := &bedrockruntime.ConverseInput{
-		ModelId: aws.String(modelID),
-		Messages: []types.Message{
-			{
-				Role: types.ConversationRoleUser,
-				Content: []types.ContentBlock{
-					&types.ContentBlockMemberDocument{
-						Value: types.DocumentBlock{
-							Format: types.DocumentFormatTxt,
-							Name:   aws.String("context"),
-							Source: &types.DocumentSourceMemberBytes{
-								Value: []byte(contextData),
-							},
-						},
-					},
-					&types.ContentBlockMemberText{
-						Value: finalPrompt,
-					},
-				},
-			},
-		},
-		InferenceConfig: &types.InferenceConfiguration{
-			Temperature: &temperature,
-			MaxTokens:   &maxTokens,
-		},
+	// Create the input for the Bedrock Agent API
+	input := &bedrockagentruntime.InvokeAgentInput{
+		AgentId:      aws.String(agentID),
+		AgentAliasId: aws.String(agentAliasID),
+		InputText:    aws.String(finalPrompt),
+		SessionId:    aws.String("default-session"), // You can generate a unique session ID if needed
 	}
 
-	log.Println("Invoking Bedrock model with filtered context...")
-	// Invoke the model
-	output, err := api.Client.Converse(context.Background(), input)
+	log.Println("Invoking Bedrock agent with filtered context...")
+	// Invoke the agent
+	output, err := api.Client.InvokeAgent(context.Background(), input)
 	if err != nil {
-		http.Error(w, "Model invocation failed.", http.StatusInternalServerError)
-		log.Printf("Error invoking Bedrock model: %v", err)
+		http.Error(w, "Agent invocation failed.", http.StatusInternalServerError)
+		log.Printf("Error invoking Bedrock agent: %v", err)
 		return
 	}
-
-	// Extract and parse the response
-	var suggestion string
-	if msgOutput, ok := output.Output.(*types.ConverseOutputMemberMessage); ok {
-		for _, content := range msgOutput.Value.Content {
-			if textBlock, ok := content.(*types.ContentBlockMemberText); ok {
-				// The model's direct output might be a JSON string, which we need to parse.
-				var bedrockOut BedrockOutput
-				if err := json.Unmarshal([]byte(textBlock.Value), &bedrockOut); err == nil {
-					suggestion = bedrockOut.Output
-				} else {
-					// If it's not a JSON string, use the text directly.
-					suggestion = textBlock.Value
-					log.Printf("Could not parse model output as JSON, using raw text. Error: %v", err)
-				}
-				break // Assuming we only need the first text block
+	log.Println("Agent invocation successful, processing response...")
+	// Extract and parse the response from agent
+	var suggestion strings.Builder
+	for event := range output.GetStream().Events() {
+		switch v := event.(type) {
+		case *types.ResponseStreamMemberChunk:
+			if v.Value.Bytes != nil {
+				suggestion.Write(v.Value.Bytes)
 			}
+		case *types.ResponseStreamMemberTrace:
+			// Handle trace events if needed
+			log.Printf("Trace event: %+v", v.Value)
 		}
 	}
 
 	// Send the response
 	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(AnalyzeResponse{Suggestion: suggestion}); err != nil {
+	if err := json.NewEncoder(w).Encode(AnalyzeResponse{Suggestion: suggestion.String()}); err != nil {
 		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
 	}
 }
