@@ -1,6 +1,6 @@
 {
-  "name": "terraform-compliance",
-  "displayName": "terraform-compliance",
+  "name": "terraform-compliance-assistant",
+  "displayName": "Terraform Compliance Assistant",
   "description": "",
   "version": "0.0.1",
   "engines": {
@@ -12,19 +12,58 @@
   "activationEvents": [],
   "main": "./out/extension.js",
   "contributes": {
-  "commands": [
-    {
-      "command": "extension.checkCompliance",
-      "title": "Check Terraform Compliance"
-    }
-  ],
-  "keybindings": [
-    {
-      "command": "extension.checkCompliance",
-      "key": "ctrl+alt+c",
-      "when": "editorTextFocus && editorLangId == tf"
-    }
-  ]
+    "languages": [
+      {
+        "id": "terraform",
+        "aliases": ["Terraform", "terraform", "tf"],
+        "extensions": [".tf"],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+        "commands": [
+            {
+                "command": "terraformCompliance.toggleAutoAnalysis",
+                "title": "Toggle Auto-Analysis",
+                "category": "Terraform Compliance Assistant"
+            },
+            {
+                "command": "terraformCompliance.checkCompliance",
+                "title": "Check Terraform Code Compliance",
+                "category": "Terraform Compliance Assistant"
+            }
+        ],
+        "configuration": {
+            "title": "Terraform Compliance",
+            "properties": {
+                "terraformCompliance.enableAutoAnalysis": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enable automatic analysis of Terraform files"
+                },
+                "terraformCompliance.debounceDelay": {
+                    "type": "number",
+                    "default": 5000,
+                    "description": "Delay in milliseconds before triggering analysis after user stops typing"
+                },
+                "terraformCompliance.analysisInterval": {
+                    "type": "number",
+                    "default": 45000,
+                    "description": "Interval in milliseconds for periodic analysis"
+                },
+        "terraformCompliance.enableDebugLogging": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable detailed debug logging for line number detection"
+        },
+        "terraformCompliance.maxSuggestionsPerFile": {
+          "type": "number",
+          "default": 10,
+          "minimum": 1,
+          "maximum": 20,
+          "description": "Maximum number of suggestions to show per file to prevent overcrowding"
+        }
+            }
+        }
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",

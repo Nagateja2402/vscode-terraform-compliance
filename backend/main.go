@@ -94,7 +94,7 @@ Give utmost two suggestion per query. Don't give same suggestion twice.
 
 	// Define the model and parameters
 	agentID := "CJUKDDIFLZ"
-	agentAliasID := "6HDTACF2UW"
+	agentAliasID := "SLBMZALQD4"
 
 	// Create the input for the Bedrock Agent API
 	input := &bedrockagentruntime.InvokeAgentInput{
@@ -112,6 +112,7 @@ Give utmost two suggestion per query. Don't give same suggestion twice.
 		log.Printf("Error invoking Bedrock agent: %v", err)
 		return
 	}
+	log.Println("Agent invocation successful, processing response...")
 	// Extract and parse the response from agent
 	var suggestion strings.Builder
 	for event := range output.GetStream().Events() {
