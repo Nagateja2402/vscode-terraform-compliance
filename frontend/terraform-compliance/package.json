@@ -33,7 +33,7 @@
             }
         ],
         "configuration": {
-            "title": "Terraform Compliance",
+            "title": "Terraform Compliance Assistant",
             "properties": {
                 "terraformCompliance.enableAutoAnalysis": {
                     "type": "boolean",
