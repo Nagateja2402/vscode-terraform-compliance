@@ -235,14 +235,11 @@ class SuggestionProvider {
             if (!location)
                 continue;
             const range = location.range;
-            const severity = this.getSuggestionSeverity(suggestion);
+            const severity = vscode.DiagnosticSeverity.Warning;
             // Add to Problems panel
             const diagnostic = new vscode.Diagnostic(range, `Compliance Issue: ${suggestion.reasoning}`, severity);
             diagnostic.source = 'Terraform Compliance Assistant';
             diagnostic.code = `suggestion-${i}`;
-            if (severity === vscode.DiagnosticSeverity.Information) {
-                diagnostic.tags = [vscode.DiagnosticTag.Unnecessary];
-            }
             diagnostics.push(diagnostic);
             // Add visual highlight with hover message
             const decorationOptions = {
@@ -785,17 +782,6 @@ class SuggestionProvider {
             'capacity', 'throughput', 'latency', 'bandwidth'
         ];
         return performanceKeywords.some(keyword => reasoning.toLowerCase().includes(keyword.toLowerCase()));
-    }
-    getSuggestionSeverity(suggestion) {
-        if (this.isSecurityRelated(suggestion.reasoning)) {
-            return vscode.DiagnosticSeverity.Error;
-        }
-        else if (this.isPerformanceRelated(suggestion.reasoning)) {
-            return vscode.DiagnosticSeverity.Warning;
-        }
-        else {
-            return vscode.DiagnosticSeverity.Information;
-        }
     }
     dispose() {
         this.stopAutoAnalysis();

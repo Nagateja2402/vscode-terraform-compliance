@@ -233,7 +233,7 @@ export class SuggestionProvider implements vscode.Disposable {
             if (!location) continue;
             
             const range = location.range;
-            const severity = this.getSuggestionSeverity(suggestion);
+            const severity = vscode.DiagnosticSeverity.Warning;
             
             // Add to Problems panel
             const diagnostic = new vscode.Diagnostic(
@@ -243,9 +243,6 @@ export class SuggestionProvider implements vscode.Disposable {
             );
             diagnostic.source = 'Terraform Compliance Assistant';
             diagnostic.code = `suggestion-${i}`;
-            if (severity === vscode.DiagnosticSeverity.Information) {
-                diagnostic.tags = [vscode.DiagnosticTag.Unnecessary];
-            }
             diagnostics.push(diagnostic);
             
             // Add visual highlight with hover message
@@ -901,16 +898,6 @@ export class SuggestionProvider implements vscode.Disposable {
         return performanceKeywords.some(keyword => 
             reasoning.toLowerCase().includes(keyword.toLowerCase())
         );
-    }
-
-    private getSuggestionSeverity(suggestion: Suggestion): vscode.DiagnosticSeverity {
-        if (this.isSecurityRelated(suggestion.reasoning)) {
-            return vscode.DiagnosticSeverity.Error;
-        } else if (this.isPerformanceRelated(suggestion.reasoning)) {
-            return vscode.DiagnosticSeverity.Warning;
-        } else {
-            return vscode.DiagnosticSeverity.Information;
-        }
     }
 
     dispose() {
