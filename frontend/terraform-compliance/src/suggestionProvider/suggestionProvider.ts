@@ -813,7 +813,7 @@ export class SuggestionProvider implements vscode.Disposable {
                 console.log('Successfully declined and removed suggestion');
             }
         } else {
-            vscode.window.showWarningMessage('Could not find suggestion to dismiss. It may have already been removed.');
+            vscode.window.showWarningMessage('Could not find suggestion to dismiss. It may have been removed.');
             if (this.debugLogging) {
                 console.log('Failed to find suggestion to decline');
             }
@@ -911,7 +911,7 @@ export class SuggestionProvider implements vscode.Disposable {
     // Manually analyze document for compliance issues (called from command)
     async manualAnalyzeDocument(document: vscode.TextDocument): Promise<void> {
         if (this.isAnalyzing) {
-            vscode.window.showWarningMessage('Analysis already in progress. Please wait...');
+            vscode.window.showWarningMessage('Analysis in progress. Please wait...');
             return;
         }
         
