@@ -15,41 +15,47 @@
     "languages": [
       {
         "id": "terraform",
-        "aliases": ["Terraform", "terraform", "tf"],
-        "extensions": [".tf"],
+        "aliases": [
+          "Terraform",
+          "terraform",
+          "tf"
+        ],
+        "extensions": [
+          ".tf"
+        ],
         "configuration": "./language-configuration.json"
       }
     ],
-        "commands": [
-            {
-                "command": "terraformCompliance.toggleAutoAnalysis",
-                "title": "Toggle Auto-Analysis",
-                "category": "Terraform Compliance Assistant"
-            },
-            {
-                "command": "terraformCompliance.checkCompliance",
-                "title": "Check Terraform Code Compliance",
-                "category": "Terraform Compliance Assistant"
-            }
-        ],
-        "configuration": {
-            "title": "Terraform Compliance Assistant",
-            "properties": {
-                "terraformCompliance.enableAutoAnalysis": {
-                    "type": "boolean",
-                    "default": true,
-                    "description": "Enable automatic analysis of Terraform files"
-                },
-                "terraformCompliance.debounceDelay": {
-                    "type": "number",
-                    "default": 5000,
-                    "description": "Delay in milliseconds before triggering analysis after user stops typing"
-                },
-                "terraformCompliance.analysisInterval": {
-                    "type": "number",
-                    "default": 45000,
-                    "description": "Interval in milliseconds for periodic analysis"
-                },
+    "commands": [
+      {
+        "command": "terraformCompliance.toggleAutoAnalysis",
+        "title": "Toggle Auto-Analysis",
+        "category": "Terraform Compliance Assistant"
+      },
+      {
+        "command": "terraformCompliance.checkCompliance",
+        "title": "Check Terraform Code Compliance",
+        "category": "Terraform Compliance Assistant"
+      }
+    ],
+    "configuration": {
+      "title": "Terraform Compliance Assistant",
+      "properties": {
+        "terraformCompliance.enableAutoAnalysis": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable automatic analysis of Terraform files"
+        },
+        "terraformCompliance.debounceDelay": {
+          "type": "number",
+          "default": 5000,
+          "description": "Delay in milliseconds before triggering analysis after user stops typing"
+        },
+        "terraformCompliance.analysisInterval": {
+          "type": "number",
+          "default": 45000,
+          "description": "Interval in milliseconds for periodic analysis"
+        },
         "terraformCompliance.enableDebugLogging": {
           "type": "boolean",
           "default": false,
@@ -62,8 +68,8 @@
           "maximum": 20,
           "description": "Maximum number of suggestions to show per file to prevent overcrowding"
         }
-            }
-        }
+      }
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
@@ -74,14 +80,17 @@
     "test": "vscode-test"
   },
   "devDependencies": {
-    "@types/vscode": "^1.99.0",
     "@types/mocha": "^10.0.10",
     "@types/node": "20.x",
+    "@types/vscode": "^1.99.0",
     "@typescript-eslint/eslint-plugin": "^8.28.0",
     "@typescript-eslint/parser": "^8.28.0",
-    "eslint": "^9.23.0",
-    "typescript": "^5.8.2",
     "@vscode/test-cli": "^0.0.10",
-    "@vscode/test-electron": "^2.4.1"
+    "@vscode/test-electron": "^2.4.1",
+    "eslint": "^9.23.0",
+    "typescript": "^5.8.2"
+  },
+  "dependencies": {
+    "dotenv": "^17.2.1"
   }
 }
