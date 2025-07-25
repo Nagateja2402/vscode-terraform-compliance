@@ -67,7 +67,7 @@ An AI-powered VSCode extension that provides **inline compliance intelligence** 
 
 Powered by:
 - **Amazon Bedrock**: Leverages Llama/Claude models
-- **Sentinel**: Uses existing OOTB policies aligned with AWS FSBP
+- **Sentinel**: Uses existing OOTB policies aligned with FSBP Compliance Standard as baseline controls
 - **Terraform Registry**: Context-aware metadata on resource configuration
 
 ### Features
@@ -95,7 +95,7 @@ Powered by:
 | Use Case | Description |
 |----------|-------------|
 | Real-time Scan | Analyze `.tf` file for compliance violations |
-| AI Suggestions | Auto-suggest code changes for AWS FSBP controls |
+| AI Suggestions | Auto-suggest code changes based on FSBP controls |
 | Explain & Educate | Provide rationale for each fix suggestion |
 | IDE Integration | Native experience in VSCode while authoring Terraform code |
 
@@ -105,7 +105,7 @@ Powered by:
 
 - **Models**: Llama2 / Claude (via Bedrock)
 - **Prompt Context**:
-  - Sentinel Policy Snippets (FSBP)
+  - Sentinel OOTB Policy Snippets (FSBP)
   - Resource metadata from Terraform Registry
   - Compliance mapping examples
 - **Response**: Suggest secure, compliant Terraform block or parameter
