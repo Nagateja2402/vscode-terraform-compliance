@@ -33,12 +33,12 @@ As Terraform adoption scales, enforcing compliance during infrastructure provisi
 
 ## Jobs To Be Done
 
-- **As a developer**, when writing `.tf` code in VSCode,  
-  I want **real-time compliance feedback** based on baseline controls,  
+- When writing `.tf` code in my IDE,  
+  I want **real-time compliance feedback** based on baseline/org controls,  
   So that I can **fix issues early** and prevent misconfigurations.
 
 - **When fixing compliance issues**,  
-  I want **AI-suggested fixes aligned to Sentinel policies**,  
+  I want **AI-suggested fixes aligned to baseline policies**,  
   So that **security is built-in** by default.
 
 ---
@@ -46,15 +46,15 @@ As Terraform adoption scales, enforcing compliance during infrastructure provisi
 ## Critical User Journey
 
 **As a developer**, I want to:
-- Receive **inline compliance feedback** aligned with AWS FSBP controls
+- Receive **inline compliance feedback** aligned with baseline controls
 - Get **AI-suggested fixes and rationale**
-- Remediate directly in the IDE before committing/applying infrastructure
+- Remediate directly in the IDE before committing/provisioning infrastructure
 
 ---
 
 ## Business Outcomes
 
-- **Accelerated Delivery**: Shift compliance left and unblock developers
+- **Accelerated Delivery**: Shift compliance left to enable secure development
 - **Lower Risk**: Prevent misconfigurations and breaches early
 - **Compliance at Scale**: Enforce consistent policies across all teams/projects
 
@@ -67,7 +67,7 @@ An AI-powered VSCode extension that provides **inline compliance intelligence** 
 
 Powered by:
 - **Amazon Bedrock**: Leverages Llama/Claude models
-- **Sentinel**: Uses existing policies aligned with AWS FSBP
+- **Sentinel**: Uses existing OOTB policies aligned with AWS FSBP
 - **Terraform Registry**: Context-aware metadata on resource configuration
 
 ### Features
