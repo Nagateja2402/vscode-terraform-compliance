@@ -11,7 +11,7 @@ class LLMService {
         try {
             const response = await fetch('https://tyur5kvly6.execute-api.us-east-1.amazonaws.com/dev/analyze', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-API-Key': 'cdMxpyKS8F5GyDXMoD6Ix33B2BpIQYcX1tEccegb' },
+                headers: { 'Content-Type': 'application/json', 'X-API-Key': process.env.BEDROCK_API_KEY || '' },
                 body: JSON.stringify({ code: code })
             });
             console.log(response.status, response.statusText);
@@ -33,8 +33,8 @@ class LLMService {
             }
             let suggestions = [];
             try {
-                suggestions = JSON.parse(suggestionJson.suggestion);
-                return suggestions;
+                // suggestions = JSON.parse(suggestionJson.suggestion);
+                return suggestionJson.suggestion;
             }
             catch (error) {
                 console.error('LLM API call failed:', error);
